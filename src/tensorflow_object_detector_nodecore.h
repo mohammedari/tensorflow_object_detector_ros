@@ -1,15 +1,9 @@
 #ifndef TENSORFLOW_OBJECT_DETECTOR_NODECORE_H_
 #define TENSORFLOW_OBJECT_DETECTOR_NODECORE_H_
 
-#include <mutex>
-#include <atomic>
-
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
-#include <sensor_msgs/CameraInfo.h>
-#include <sensor_msgs/PointCloud2.h>
 #include <image_transport/image_transport.h>
-#include <tf/transform_listener.h>
 
 #include "tensorflow_object_detector.h"
 

@@ -3,8 +3,6 @@
 
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
-#include <pcl_ros/transforms.h>
-#include <pcl_conversions/pcl_conversions.h>
 
 #include "tensorflow_object_detector_nodecore.h"
 
@@ -12,7 +10,7 @@ TensorflowObjectDetectorNodeCore::TensorflowObjectDetectorNodeCore(const ros::No
   : nh_(nh_private), it_(nh) 
 {
     //subscribers
-    imageSubscriber_ = it_.subscribe("image_in", 1, &SignboardLocatorNodeCore::imageCallback, this);
+    imageSubscriber_ = it_.subscribe("image_in", 1, &TensorflowObjectDetectorNodeCore::imageCallback, this);
 
     //publishers
     imagePublisher_ = it_.advertise("image_out", 1);
@@ -22,7 +20,6 @@ TensorflowObjectDetectorNodeCore::TensorflowObjectDetectorNodeCore(const ros::No
     nh_.param<std::string>("graph_path", graph_path, "");
     nh_.param<std::string>("labels_path", labels_path, "");
     nh_.param<double>("score_threshold", score_threshold_, 0.8);
-    nh_.param<bool>("enable_debug_output", enable_debug_output_, false);
     nh_.param<bool>("always_output_image", always_output_image_, false);
 
     //initialize tensorflow

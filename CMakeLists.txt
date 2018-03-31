@@ -105,7 +105,7 @@ find_package(Eigen REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
+  INCLUDE_DIRS 
   CATKIN_DEPENDS std_msgs roscpp image_transport 
 #  DEPENDS system_lib
 )
