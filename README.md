@@ -2,6 +2,8 @@
 
 A ROS node using TensorFlow Object Detection API.
 
+![image](./image.png)
+
 ## How to build?
 -----
 
@@ -35,4 +37,8 @@ catkin build
 ## How to run?
 -----
 
-TODO
+```
+cd ~/catkin_ws
+source devel/setup.bash
+roslaunch tensorflow_object_detector object_detection.launch
+```
