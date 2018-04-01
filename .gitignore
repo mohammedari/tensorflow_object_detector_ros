@@ -1,5 +1,5 @@
 
-# Created by https://www.gitignore.io/api/ros
+# Created by https://www.gitignore.io/api/vim,ros,visualstudiocode
 
 ### ROS ###
 build/
@@ -50,5 +50,24 @@ qtcreator-*
 # Catkin custom files
 CATKIN_IGNORE
 
+### Vim ###
+# swap
+.sw[a-p]
+.*.sw[a-p]
+# session
+Session.vim
+# temporary
+.netrwhist
+# auto-generated tag files
+tags
 
-# End of https://www.gitignore.io/api/ros
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history
+
+
+# End of https://www.gitignore.io/api/vim,ros,visualstudiocode

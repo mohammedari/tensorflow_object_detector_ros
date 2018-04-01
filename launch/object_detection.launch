@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<launch>
+
+  <node pkg="usb_cam" type="usb_cam_node" name="usb_cam" output="screen" >
+    <param name="video_device" value="/dev/video0" />
+    <param name="image_width" value="640" />
+    <param name="image_height" value="480" />
+    <param name="pixel_format" value="yuyv" />
+    <param name="camera_frame_id" value="usb_cam" />
+    <param name="io_method" value="mmap"/>
+
+    <remap from="/usb_cam/image_raw" to="/image_in"/>
+  </node>
+
+  <node pkg="tensorflow_object_detector"
+        type="tensorflow_object_detector"
+        name="tensorflow_object_detector"
+        output="screen">
+    <param name="graph_path" value="$(find tensorflow_object_detector)/config/ssd_mobilenet_v1_coco.pb"/> 
+    <param name="labels_path" value="$(find tensorflow_object_detector)/config/mscoco_labels.txt"/>
+    <param name="score_threshold" value="0.3"/> 
+    <param name="always_output_image" value="true"/> 
+  
+    <remap from="image_in" to="/image_in"/>
+    <remap from="image_out" to="/image_out"/>
+  </node>
+
+  <node pkg="image_view" type="image_view" name="viewer">
+    <remap from="image" to="/image_out"/>
+  </node>
+</launch>
