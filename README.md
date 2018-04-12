@@ -21,6 +21,7 @@ catkin init
 cd ~/catkin_ws/src
 git clone <repository_path>
 ```
+This may take few minutes for downloading tensorflow library and models.
 
 ### install prerequisite packages
 Install USB camera node.
