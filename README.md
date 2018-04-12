@@ -1,11 +1,10 @@
 # TensorFlow Object Detector ROS Node
 
-A ROS node using TensorFlow Object Detection API.
+A ROS node using TensorFlow Object Detection C++ API.
 
 ![image](./image.png)
 
 ## How to build?
------
 
 ### setup ROS 
 see http://wiki.ros.org/Installation
@@ -35,7 +34,6 @@ catkin build
 ```
 
 ## How to run?
------
 
 ```
 cd ~/catkin_ws

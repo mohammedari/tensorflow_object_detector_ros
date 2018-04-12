@@ -72,19 +72,17 @@ std::vector<TensorflowObjectDetector::Result> TensorflowObjectDetector::detect(c
         const int label_index = classes_tensor(i);
 
         std::string label;
-        //if (label_index <= labels_.size()) {
-        //    label = labels_[label_index - 1];
-        //} else {
-        //    label = "unknown";
-        //}
-
-        //TODO test
+        if (label_index <= labels_.size()) {
+            label = labels_[label_index - 1];
+        } else {
+            label = "unknown";
+        }
+        
         std::stringstream ss;
-        ss << classes_tensor(i) << " : " << labels_[label_index - 1];
-        label = ss.str();
+        ss << classes_tensor(i) << " : " << label;
 
         results.push_back({
-            box, score, label_index, label
+            box, score, label_index, ss.str()
         });
     }
 
