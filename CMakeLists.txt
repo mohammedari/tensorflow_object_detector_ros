@@ -121,6 +121,8 @@ include_directories(
   include
   thirdparty/tensorflow/include
   ${catkin_INCLUDE_DIRS}
+  ${Eigen_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 link_directories(thirdparty/tensorflow/lib)
@@ -128,6 +130,7 @@ link_directories(thirdparty/tensorflow/lib)
 ## Declare a C++ library
 add_library(tensorflow_object_detector_lib
   src/tensorflow_object_detector.cpp 
+  src/tensorflow_util.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -147,6 +150,6 @@ target_link_libraries(tensorflow_object_detector
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
   tensorflow_object_detector_lib
-  tensorflow_cc
+  tensorflow
 )
 

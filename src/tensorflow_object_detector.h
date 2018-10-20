@@ -6,11 +6,10 @@
 #include <memory>
 
 #include "Eigen/Geometry"
+#include "unsupported/Eigen/CXX11/Tensor"
+#include "tensorflow/c/c_api.h"
 
-#include "tensorflow/core/framework/tensor.h"
-#include "tensorflow/core/public/session.h"
-
-class TensorflowObjectDetector
+class TensorFlowObjectDetector
 {
 private:
     //constant tensor names for tensorflow object detection api
@@ -21,7 +20,8 @@ private:
     const std::string NUM_DETECTIONS = "num_detections:0";
 
     std::vector<std::string> labels_;
-    std::unique_ptr<tensorflow::Session> session_;
+    TF_Graph *graph_;
+    TF_Session *session_;
 
 public:
     struct Result
@@ -32,10 +32,15 @@ public:
         std::string label;
     };
 
-    TensorflowObjectDetector(const std::string& graph_path, const std::string& labels_path);
+    TensorFlowObjectDetector(const std::string& graph_path, const std::string& labels_path);
+    ~TensorFlowObjectDetector();
 
-    //TODO tensorflow::Tensorを直接渡さずに、Eigen::Tensorなどで画像を渡したい
-    std::vector<Result> detect(const tensorflow::Tensor& image_tensor, float score_threshold);
+    std::vector<Result> detect(const Eigen::Tensor<float, 3>& image_tensor, float score_threshold);
+
+    TensorFlowObjectDetector(const TensorFlowObjectDetector&) = delete;
+    TensorFlowObjectDetector(TensorFlowObjectDetector&&) = delete;
+    TensorFlowObjectDetector& operator=(const TensorFlowObjectDetector&) = delete;
+    TensorFlowObjectDetector& operator=(TensorFlowObjectDetector&&) = delete;
 };
 
 #endif //TENSORFLOW_OBJECT_DETECTOR_H_
