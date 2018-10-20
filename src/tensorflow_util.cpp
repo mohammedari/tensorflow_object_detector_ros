@@ -6,14 +6,12 @@
 
 std::unique_ptr<TF_Status> TensorFlowUtil::createStatus()
 {
-    auto ptr = std::unique_ptr<TF_Status>(TF_NewStatus());
-    return std::move(ptr);
+    return std::unique_ptr<TF_Status>(TF_NewStatus());
 }
 
 std::unique_ptr<TF_Buffer> TensorFlowUtil::createBuffer()
 {
-    auto ptr = std::unique_ptr<TF_Buffer>(TF_NewBuffer());
-    return std::move(ptr);
+    return std::unique_ptr<TF_Buffer>(TF_NewBuffer());
 }
 
 std::unique_ptr<TF_Buffer> TensorFlowUtil::createBuffer(const std::string& filename)
@@ -51,25 +49,22 @@ std::unique_ptr<TF_Session> TensorFlowUtil::createSession(TF_Graph* graph, const
 
     throwIfError(status.get(), "An error reported while creating session");
 
-    return std::move(ptr);
+    return ptr;
 }
 
 std::unique_ptr<TF_SessionOptions> TensorFlowUtil::createSessionOptions()
 {
-    auto ptr = std::unique_ptr<TF_SessionOptions>(TF_NewSessionOptions());
-    return std::move(ptr);
+    return std::unique_ptr<TF_SessionOptions>(TF_NewSessionOptions());
 }
 
 std::unique_ptr<TF_Graph> TensorFlowUtil::createGraph()
 {
-    auto ptr = std::unique_ptr<TF_Graph>(TF_NewGraph());
-    return std::move(ptr);
+    return std::unique_ptr<TF_Graph>(TF_NewGraph());
 }
 
 std::unique_ptr<TF_ImportGraphDefOptions> TensorFlowUtil::createImportGraphDefOptions()
 {
-    auto ptr = std::unique_ptr<TF_ImportGraphDefOptions>(TF_NewImportGraphDefOptions());
-    return std::move(ptr);
+    return std::unique_ptr<TF_ImportGraphDefOptions>(TF_NewImportGraphDefOptions());
 }
 
 void TensorFlowUtil::throwIfError(TF_Status* status, const std::string& message)

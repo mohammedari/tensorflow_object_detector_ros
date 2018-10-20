@@ -5,6 +5,8 @@
 #include <string>
 #include <iostream>
 
+#include "unsupported/Eigen/CXX11/Tensor"
+
 #include "tensorflow/c/c_api.h"
 
 class TensorFlowUtil
@@ -20,8 +22,8 @@ public:
     static std::unique_ptr<TF_Graph> createGraph();
     static std::unique_ptr<TF_ImportGraphDefOptions> createImportGraphDefOptions();
 
-    template<size_t ROWS, size_t COLS, size_t CHANNEL>
-    static std::unique_ptr<TF_Tensor> createTensor(void*);
+    template<TF_DataType DATA_TYPE, class T, size_t NDIMS>
+    static std::unique_ptr<TF_Tensor> createTensor(const Eigen::Tensor<T, NDIMS>& tensor);
 
     static void throwIfError(TF_Status* status, const std::string& message);
 
@@ -102,10 +104,23 @@ namespace std
     };
 }
 
-template<size_t ROWS, size_t COLS, size_t CHANNEL>
-std::unique_ptr<TF_Tensor> TensorFlowUtil::createTensor(void*)
+template<TF_DataType DATA_TYPE, class T, size_t NDIMS>
+std::unique_ptr<TF_Tensor> TensorFlowUtil::createTensor(const Eigen::Tensor<T, NDIMS>& tensor)
 {
-    //TODO
+    auto dims = std::array<long, NDIMS>();
+    for (auto i = 0; i < NDIMS; ++i) {
+        dims[i] = tensor.dimension(i);
+    }
+
+    auto data = new char[tensor.size()];
+    std::copy(&tensor(0), &tensor(0) + tensor.size(), data);
+
+    static const auto deleter = [](void* data, size_t size, void* arg)
+    {
+        delete[] static_cast<char*>(data);
+    };
+
+    return std::unique_ptr<TF_Tensor>(TF_NewTensor(DATA_TYPE, dims.data(), dims.size(), data, tensor.size(), deleter, nullptr));
 }
 
 #endif //TENSORFLOW_UTIL_H_

@@ -1,104 +1,134 @@
+#include "tensorflow_object_detector.h"
+
+#include <fstream>
 #include <sstream>
 #include <stdexcept>
 
-#include "tensorflow_object_detector.h"
-
 TensorFlowObjectDetector::TensorFlowObjectDetector(const std::string& graph_path, const std::string& labels_path)
 {
-//    //load graph
-//    {
-//        auto status = TF_NewStatus();
-//
-//        graph_ = TF_NewGraph();
-//
-//        //import
-//        auto graph_def = read_file_to_new_buffer(graph_path);
-//        auto options = TF_NewImportGraphDefOptions();
-//        TF_GraphImportGraphDef(graph_, graph_def, opions, status)
-//        TF_DeleteImportGraphDefOptions(options);
-//        TF_DeleteBuffer(graph_def);
-//
-//        throw_if_error(status, "Failed to load graph");
-//
-//        TF_DeleteStatus(status);
-//    }
-//
-//    //create session
-//    {
-//        auto status = TF_NewStatus();
-//
-//        auto options = TF_NewSessionOptions();
-//        session_ = TF_NewSession(graph_, options_, status_);
-//        TF_DeleteSessionOptions(options)
-//
-//        throw_if_error(status, "Failed to create session");
-//
-//        TF_DeleteStatus(status)
-//    }
-//
-//    //read labels
-//    {
-//        std::ifstream file(labels_path);
-//        if (!file) {
-//            std::stringstream ss;
-//            ss << "Labels file " << labels_path << " is not found." << std::endl;
-//            throw std::invalid_argument(ss.str());
-//        }
-//        std::string line;
-//        while (std::getline(file, line)) {
-//            labels_.push_back(line);
-//        }
-//    }
+    //load graph
+    {
+        auto status = TensorFlowUtil::createStatus();
+        graph_ = TensorFlowUtil::createGraph();
+
+        //import
+        auto graph_def = TensorFlowUtil::createBuffer(graph_path);
+        auto options = TensorFlowUtil::createImportGraphDefOptions();
+        TF_GraphImportGraphDef(graph_.get(), graph_def.get(), options.get(), status.get());
+        TensorFlowUtil::throwIfError(status.get(), "Failed to load graph");
+    }
+
+    //create session
+    {
+        auto status = TensorFlowUtil::createStatus();
+        auto options = TensorFlowUtil::createSessionOptions();
+        session_ = TensorFlowUtil::createSession(graph_.get(), options.get());
+    }
+
+    //read labels
+    {
+        std::ifstream file(labels_path);
+        if (!file) {
+            std::stringstream ss;
+            ss << "Labels file " << labels_path << " is not found." << std::endl;
+            throw std::invalid_argument(ss.str());
+        }
+        std::string line;
+        while (std::getline(file, line)) {
+            labels_.push_back(line);
+        }
+    }
+
+    //setup operations
+    {
+        image_tensor_      = {TF_GraphOperationByName(graph_.get(), IMAGE_TENSOR.c_str())     , 0};
+        detection_boxes_   = {TF_GraphOperationByName(graph_.get(), DETECTION_BOXES.c_str())  , 0};
+        detection_scores_  = {TF_GraphOperationByName(graph_.get(), DETECTION_SCORES.c_str()) , 0};
+        detection_classes_ = {TF_GraphOperationByName(graph_.get(), DETECTION_CLASSES.c_str()), 0};
+        num_detections_    = {TF_GraphOperationByName(graph_.get(), NUM_DETECTIONS.c_str())   , 0};
+    }
 }
 
-TensorFlowObjectDetector::~TensorFlowObjectDetector()
+std::vector<TensorFlowObjectDetector::Result> TensorFlowObjectDetector::detect(const cv::Mat& image, float score_threshold)
 {
-}
+    const auto rows     = image.rows;
+    const auto cols     = image.cols;
+    const auto channels = image.channels();
 
-std::vector<TensorFlowObjectDetector::Result> TensorFlowObjectDetector::detect(const Eigen::Tensor<float, 3>& input_tensor, float score_threshold)
-{
-//    std::vector<tensorflow::Tensor> outputs;
-//    auto run_status = session_->Run({{IMAGE_TENSOR, input_tensor}},
-//                                     {DETECTION_BOXES, DETECTION_SCORES, DETECTION_CLASSES, NUM_DETECTIONS}, {}, &outputs);
-//    if (!run_status.ok()) {
-//        std::stringstream ss;
-//        ss << "Failed to run interference model: " << run_status.ToString() << std::endl;
-//        throw std::runtime_error(ss.str());
-//    }
-//
-//    const auto boxes_tensor = outputs[0].shaped<float, 2>({100, 4});     //shape={1, 100, 4}
-//    const auto scores_tensor = outputs[1].shaped<float, 1>({100});       //shape={1, 100}
-//    const auto classes_tensor = outputs[2].shaped<float, 1>({100});      //shape={1, 100}
-//    const auto num_detections_tensor = outputs[3].shaped<float, 1>({1}); //shape={1}
+    //setup input image tensor
+    //TODO improve copy method for faster execution
+    Eigen::Tensor<uint8_t, 4> eigen_tensor(1, rows, cols, channels);
+    for (auto y = 0; y < rows; ++y)
+        for (auto x = 0; x < cols; ++x)
+            for (auto c = 0; c < channels; ++c)
+                eigen_tensor(1, y, x, c) = image.at<cv::Vec3b>(y,x)[c];
 
-    //retrieve and format valid results
+    auto image_tensor_value = TensorFlowUtil::createTensor<TF_UINT8, uint8_t, 4>(eigen_tensor);
+
+    //run session
+    std::array<std::unique_ptr<TF_Tensor>, 4> outputs;
+    {
+        auto status = TensorFlowUtil::createStatus();
+
+        std::array<TF_Output , 1> input_ops    = {image_tensor_};
+        std::array<TF_Tensor*, 1> input_values = {image_tensor_value.get()};
+        std::array<TF_Output , 4> output_ops   = {detection_boxes_, detection_scores_, detection_classes_, num_detections_};
+
+        TF_Tensor** output_values;
+        TF_SessionRun(
+            session_.get(), 
+            nullptr,    //run options
+            input_ops.data() , input_values.data(), input_ops.size(),
+            output_ops.data(), output_values      , output_ops.size(),
+            nullptr, 0, //targets
+            nullptr,    //run metadata
+            status.get()
+        );
+
+        for (int i = 0; i < outputs.size(); ++i)
+        {
+            outputs[i] = std::unique_ptr<TF_Tensor>(output_values[i]);
+        }
+
+        TensorFlowUtil::throwIfError(status.get(), "Failed to run session");
+    }
+
+    //copy results
     std::vector<Result> results;
-//    for(int i = 0; i < num_detections_tensor(0); ++i) {
-//        const float score = scores_tensor(i);
-//        if (score < score_threshold) {
-//            continue;
-//        }
-//
-//        const Eigen::AlignedBox2f box(
-//            Eigen::Vector2f(boxes_tensor(i, 1), boxes_tensor(i, 0)),
-//            Eigen::Vector2f(boxes_tensor(i, 3), boxes_tensor(i, 2))
-//        );
-//        const int label_index = classes_tensor(i);
-//
-//        std::string label;
-//        if (label_index <= labels_.size()) {
-//            label = labels_[label_index - 1];
-//        } else {
-//            label = "unknown";
-//        }
-//        
-//        std::stringstream ss;
-//        ss << classes_tensor(i) << " : " << label;
-//
-//        results.push_back({
-//            box, score, label_index, ss.str()
-//        });
-//    }
+    {
+        const auto boxes_tensor          = Eigen::TensorMap<Eigen::Tensor<float, 2>>(static_cast<float*>(TF_TensorData(outputs[0].get())), {100, 4});
+        const auto scores_tensor         = Eigen::TensorMap<Eigen::Tensor<float, 1>>(static_cast<float*>(TF_TensorData(outputs[1].get())), {100});
+        const auto classes_tensor        = Eigen::TensorMap<Eigen::Tensor<float, 1>>(static_cast<float*>(TF_TensorData(outputs[2].get())), {100});
+        const auto num_detections_tensor = Eigen::TensorMap<Eigen::Tensor<float, 1>>(static_cast<float*>(TF_TensorData(outputs[3].get())), {1});
+
+        //retrieve and format valid results
+        for(int i = 0; i < num_detections_tensor(0); ++i) {
+            const float score = scores_tensor(i);
+            if (score < score_threshold) {
+                continue;
+            }
+
+            const Eigen::AlignedBox2f box(
+                Eigen::Vector2f(boxes_tensor(i, 1), boxes_tensor(i, 0)),
+                Eigen::Vector2f(boxes_tensor(i, 3), boxes_tensor(i, 2))
+            );
+            const int label_index = classes_tensor(i);
+
+            std::string label;
+            if (label_index <= labels_.size()) {
+                label = labels_[label_index - 1];
+            } else {
+                label = "unknown";
+            }
+            
+            std::stringstream ss;
+            ss << classes_tensor(i) << " : " << label;
+
+            results.push_back({
+                box, score, label_index, ss.str()
+            });
+        }
+    }
 
     return results;
 }

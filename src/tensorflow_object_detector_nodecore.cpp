@@ -39,28 +39,12 @@ void TensorFlowObjectDetectorNodeCore::imageCallback(const sensor_msgs::Image::C
         return;
     }
 
-    //setup input tensor
-    const auto& image = cv_ptr->image;
-    const auto rows = image.rows;
-    const auto cols = image.cols;
-    const auto channels = image.channels();
-
-    //TODO
-//    tensorflow::Tensor input_tensor(tensorflow::DT_UINT8,
-//        tensorflow::TensorShape({1, rows, cols, channels}));
-//
-//    auto image_data = input_tensor.shaped<uint8_t, 3>({rows, cols, channels});
-//    for (auto y = 0; y < rows; ++y)
-//        for (auto x = 0; x < cols; ++x)
-//            for (auto c = 0; c < channels; ++c)
-//                image_data(y, x, c) = image.at<cv::Vec3b>(y,x)[c];
-
     // perform actual detection
     std::vector<TensorFlowObjectDetector::Result> results;
     {
         try
         {
-            //results = detector_->detect(input_tensor, score_threshold_);
+            results = detector_->detect(cv_ptr->image, score_threshold_);
         }
         catch (std::runtime_error& e)
         {

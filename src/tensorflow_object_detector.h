@@ -5,8 +5,12 @@
 #include <string>
 #include <memory>
 
+#include <opencv2/opencv.hpp>
+
 #include "Eigen/Geometry"
 #include "unsupported/Eigen/CXX11/Tensor"
+
+#include "tensorflow_util.h"
 #include "tensorflow/c/c_api.h"
 
 class TensorFlowObjectDetector
@@ -20,8 +24,14 @@ private:
     const std::string NUM_DETECTIONS = "num_detections:0";
 
     std::vector<std::string> labels_;
-    TF_Graph *graph_;
-    TF_Session *session_;
+    std::unique_ptr<TF_Graph> graph_;
+    std::unique_ptr<TF_Session> session_;
+
+    TF_Output image_tensor_;
+    TF_Output detection_boxes_;
+    TF_Output detection_scores_;
+    TF_Output detection_classes_;
+    TF_Output num_detections_;
 
 public:
     struct Result
@@ -33,9 +43,9 @@ public:
     };
 
     TensorFlowObjectDetector(const std::string& graph_path, const std::string& labels_path);
-    ~TensorFlowObjectDetector();
+    ~TensorFlowObjectDetector() = default;
 
-    std::vector<Result> detect(const Eigen::Tensor<float, 3>& image_tensor, float score_threshold);
+    std::vector<Result> detect(const cv::Mat& image, float score_threshold);
 
     TensorFlowObjectDetector(const TensorFlowObjectDetector&) = delete;
     TensorFlowObjectDetector(TensorFlowObjectDetector&&) = delete;
