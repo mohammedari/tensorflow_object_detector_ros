@@ -1,6 +1,7 @@
 # TensorFlow Object Detector ROS Node
 
-A ROS node using TensorFlow Object Detection C++ API.
+A ROS node using TensorFlow Object Detection C API.
+This repository includes TensorFlow 1.11.0 library and works without any additional setup for TensorFlow library.
 
 ![image](./image.png)
 

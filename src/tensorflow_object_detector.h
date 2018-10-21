@@ -5,23 +5,33 @@
 #include <string>
 #include <memory>
 
+#include <opencv2/opencv.hpp>
+
 #include "Eigen/Geometry"
+#include "unsupported/Eigen/CXX11/Tensor"
 
-#include "tensorflow/core/framework/tensor.h"
-#include "tensorflow/core/public/session.h"
+#include "tensorflow_util.h"
+#include "tensorflow/c/c_api.h"
 
-class TensorflowObjectDetector
+class TensorFlowObjectDetector
 {
 private:
     //constant tensor names for tensorflow object detection api
-    const std::string IMAGE_TENSOR = "image_tensor:0";
-    const std::string DETECTION_BOXES = "detection_boxes:0";
-    const std::string DETECTION_SCORES = "detection_scores:0";
-    const std::string DETECTION_CLASSES = "detection_classes:0";
-    const std::string NUM_DETECTIONS = "num_detections:0";
+    const std::string IMAGE_TENSOR = "image_tensor";
+    const std::string DETECTION_BOXES = "detection_boxes";
+    const std::string DETECTION_SCORES = "detection_scores";
+    const std::string DETECTION_CLASSES = "detection_classes";
+    const std::string NUM_DETECTIONS = "num_detections";
 
     std::vector<std::string> labels_;
-    std::unique_ptr<tensorflow::Session> session_;
+    std::unique_ptr<TF_Graph> graph_;
+    std::unique_ptr<TF_Session> session_;
+
+    TF_Output image_tensor_;
+    TF_Output detection_boxes_;
+    TF_Output detection_scores_;
+    TF_Output detection_classes_;
+    TF_Output num_detections_;
 
 public:
     struct Result
@@ -32,10 +42,15 @@ public:
         std::string label;
     };
 
-    TensorflowObjectDetector(const std::string& graph_path, const std::string& labels_path);
+    TensorFlowObjectDetector(const std::string& graph_path, const std::string& labels_path);
+    ~TensorFlowObjectDetector() = default;
 
-    //TODO tensorflow::Tensorを直接渡さずに、Eigen::Tensorなどで画像を渡したい
-    std::vector<Result> detect(const tensorflow::Tensor& image_tensor, float score_threshold);
+    std::vector<Result> detect(const cv::Mat& image, float score_threshold);
+
+    TensorFlowObjectDetector(const TensorFlowObjectDetector&) = delete;
+    TensorFlowObjectDetector(TensorFlowObjectDetector&&) = delete;
+    TensorFlowObjectDetector& operator=(const TensorFlowObjectDetector&) = delete;
+    TensorFlowObjectDetector& operator=(TensorFlowObjectDetector&&) = delete;
 };
 
 #endif //TENSORFLOW_OBJECT_DETECTOR_H_

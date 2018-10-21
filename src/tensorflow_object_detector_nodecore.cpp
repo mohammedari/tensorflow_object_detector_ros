@@ -6,11 +6,11 @@
 
 #include "tensorflow_object_detector_nodecore.h"
 
-TensorflowObjectDetectorNodeCore::TensorflowObjectDetectorNodeCore(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private)
+TensorFlowObjectDetectorNodeCore::TensorFlowObjectDetectorNodeCore(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private)
   : nh_(nh_private), it_(nh) 
 {
     //subscribers
-    imageSubscriber_ = it_.subscribe("image_in", 1, &TensorflowObjectDetectorNodeCore::imageCallback, this);
+    imageSubscriber_ = it_.subscribe("image_in", 1, &TensorFlowObjectDetectorNodeCore::imageCallback, this);
 
     //publishers
     imagePublisher_ = it_.advertise("image_out", 1);
@@ -23,10 +23,10 @@ TensorflowObjectDetectorNodeCore::TensorflowObjectDetectorNodeCore(const ros::No
     nh_.param<bool>("always_output_image", always_output_image_, false);
 
     //initialize tensorflow
-    detector_.reset(new TensorflowObjectDetector(graph_path, labels_path));
+    detector_.reset(new TensorFlowObjectDetector(graph_path, labels_path));
 }
 
-void TensorflowObjectDetectorNodeCore::imageCallback(const sensor_msgs::Image::ConstPtr& msg)
+void TensorFlowObjectDetectorNodeCore::imageCallback(const sensor_msgs::Image::ConstPtr& msg)
 {
     cv_bridge::CvImagePtr cv_ptr;
     try
@@ -39,31 +39,16 @@ void TensorflowObjectDetectorNodeCore::imageCallback(const sensor_msgs::Image::C
         return;
     }
 
-    //setup input tensor
-    const auto& image = cv_ptr->image;
-    const auto rows = image.rows;
-    const auto cols = image.cols;
-    const auto channels = image.channels();
-
-    tensorflow::Tensor input_tensor(tensorflow::DT_UINT8,
-        tensorflow::TensorShape({1, rows, cols, channels}));
-
-    auto image_data = input_tensor.shaped<uint8_t, 3>({rows, cols, channels});
-    for (auto y = 0; y < rows; ++y)
-        for (auto x = 0; x < cols; ++x)
-            for (auto c = 0; c < channels; ++c)
-                image_data(y, x, c) = image.at<cv::Vec3b>(y,x)[c];
-
     // perform actual detection
-    std::vector<TensorflowObjectDetector::Result> results;
+    std::vector<TensorFlowObjectDetector::Result> results;
     {
         try
         {
-            results = detector_->detect(input_tensor, score_threshold_);
+            results = detector_->detect(cv_ptr->image, score_threshold_);
         }
         catch (std::runtime_error& e)
         {
-            ROS_ERROR_STREAM("Tensorflow runtime detection error: " << e.what());
+            ROS_ERROR_STREAM("TensorFlow runtime detection error: " << e.what());
             return;
         }
     }
