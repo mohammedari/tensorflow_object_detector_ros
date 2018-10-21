@@ -23,7 +23,7 @@ public:
     static std::unique_ptr<TF_ImportGraphDefOptions> createImportGraphDefOptions();
 
     template<TF_DataType DATA_TYPE, class T, size_t NDIMS>
-    static std::unique_ptr<TF_Tensor> createTensor(const Eigen::Tensor<T, NDIMS>& tensor);
+    static std::unique_ptr<TF_Tensor> createTensor(const Eigen::Tensor<T, NDIMS, Eigen::RowMajor>& tensor);
 
     static void throwIfError(TF_Status* status, const std::string& message);
 
@@ -105,7 +105,7 @@ namespace std
 }
 
 template<TF_DataType DATA_TYPE, class T, size_t NDIMS>
-std::unique_ptr<TF_Tensor> TensorFlowUtil::createTensor(const Eigen::Tensor<T, NDIMS>& tensor)
+std::unique_ptr<TF_Tensor> TensorFlowUtil::createTensor(const Eigen::Tensor<T, NDIMS, Eigen::RowMajor>& tensor)
 {
     auto dims = std::array<long, NDIMS>();
     for (auto i = 0; i < NDIMS; ++i) {

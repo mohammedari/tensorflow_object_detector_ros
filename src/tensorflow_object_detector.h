@@ -17,11 +17,11 @@ class TensorFlowObjectDetector
 {
 private:
     //constant tensor names for tensorflow object detection api
-    const std::string IMAGE_TENSOR = "image_tensor:0";
-    const std::string DETECTION_BOXES = "detection_boxes:0";
-    const std::string DETECTION_SCORES = "detection_scores:0";
-    const std::string DETECTION_CLASSES = "detection_classes:0";
-    const std::string NUM_DETECTIONS = "num_detections:0";
+    const std::string IMAGE_TENSOR = "image_tensor";
+    const std::string DETECTION_BOXES = "detection_boxes";
+    const std::string DETECTION_SCORES = "detection_scores";
+    const std::string DETECTION_CLASSES = "detection_classes";
+    const std::string NUM_DETECTIONS = "num_detections";
 
     std::vector<std::string> labels_;
     std::unique_ptr<TF_Graph> graph_;
